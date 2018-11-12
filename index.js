@@ -1,8 +1,9 @@
 const _ = require("lodash");
+const SpritePlugin = require("svg-sprite-loader/plugin");
 
 const defaults = {
 	inline: { resourceQuery: /inline/, svgo: false }, // Options for vue-svg-loader
-	sprite: { resourceQuery: /sprite/, extract: false }, // Options for svg-sprite-loader
+	sprite: { resourceQuery: /sprite/, extract: true }, // Options for svg-sprite-loader
 	data: { resourceQuery: /data/ }, // Options for url-loader
 	external: {} // Options for file-loader
 };
@@ -28,7 +29,7 @@ function setup(config, options) {
 
 	const fileLoaderOptions = rule.use("file-loader").get("options"); // Get the file loader options
 	options.external = _.merge(fileLoaderOptions, options.external); // Make sure we save the file loader options
-	options.sprite = _.merge({ spriteFilename: fileLoaderOptions.name }, options.sprite); // Use file loader options for sprite name
+	options.sprite = _.merge({ spriteFilename: "sprite.svg" /* the default */ || fileLoaderOptions.name }, options.sprite); // Use file loader options for sprite name
 
 	rule.uses.clear(); // Clear out existing uses of the svg rule
 
@@ -38,6 +39,10 @@ function setup(config, options) {
 		query[option] = options[option].resourceQuery; // Get the query
 		delete options[option].resourceQuery; // Delete the field (to prevent passing it as a loader option)
 	}
+
+	config
+		.plugin("sprite")
+		.use(SpritePlugin);
 
 	rule
 		.oneOf("inline").resourceQuery(query.inline).use("vue-svg-loader").loader("vue-svg-loader").options(options.inline).end().end()
